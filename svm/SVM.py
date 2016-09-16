@@ -1,9 +1,9 @@
 import csv
-import re
 import numpy as np
 
-from numpy import genfromtxt
-from sklearn import preprocessing
+from sklearn import cross_validation
+from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
@@ -24,13 +24,28 @@ class SVM:
         subjects = np.matrix(self.subjects)
         sbjFile.close()
 
+        X = subjects[:, 1:]
+        y = []
+        ids = subjects[:,0]
+
+    '''
+        Normalia cada coluna
+    '''
+    def normalise(self, X_train, X_test):
+        scaler = StandardScaler()
+        X_train = scaler.fit_transform(X_train)
+        X_test  = scaler.transform(X_test)
+
 
     '''
 
     '''
-    def classify(self):
+    def classify(self, X, y):
 
-        return None
+        loo = cross_validation.LeaveOneOut(len(y))
+        clf = SVC(C=0.1, kernel='linear')
+
+        return loo
 
     '''
         Retorna uma lista com o indice das colunas que mais contribuiram para a classificacao
