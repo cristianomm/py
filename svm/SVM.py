@@ -6,25 +6,53 @@ from numpy import genfromtxt
 from sklearn import preprocessing
 from sklearn.base import BaseEstimator, TransformerMixin
 
+
+class SVM:
+    def __init__(self, columns):
+        self.columns = columns
+        self.subjects = []
+
+
+    '''
+        carrega o arquivo com os dados comportamentais
+    '''
+    def load(self, fileName):
+        with open(fileName, 'r') as sbjFile:
+            reader = csv.reader(sbjFile, delimiter=';')
+            for line in reader:
+                self.subjects.append(line)
+        subjects = np.matrix(self.subjects)
+        sbjFile.close()
+
+
+    '''
+
+    '''
+    def classify(self):
+
+        return None
+
+    '''
+        Retorna uma lista com o indice das colunas que mais contribuiram para a classificacao
+    '''
+    def getRelevantColumns(self):
+
+        return None
+
+    '''
+        Retorna as medidas de desempenho referentes a classificacao realizada
+    '''
+    def getAccMetrics(self):
+
+        return None
+
 if __name__ == "__main__":
-    fileName = 'C:\\Disco\\Users\\Cristiano\\Google Drive\\Trabalho\\PRAIAS\\Dados\\Comportamentais\\Comp2014.csv'
+    fileName = '/home/cristianomm/Projects/PyCharm/py/data/Comp2014.csv'
 
+    #colunas que contem os dados das tarefas que foram realizadas
     columns = [0,1,2,4,5,6,11,12,13,14,15,16]
-    formats=[str, float, float, float, float, float, float, float, float, float, float, float]
-#
+    svm = SVM(columns)
 
-#def load(fileName):
-    subjects = []
-
-    with open(fileName, 'r') as sbjFile:
-        reader = csv.reader(sbjFile, delimiter=';')
-        for line in reader:
-            subjects.append(line)
-    subjects = np.matrix(subjects)
-    sbjFile.close()
-    print subjects[:,[columns]]
+    svm.load(fileName)
 
 
-
-
-    #return subjects
