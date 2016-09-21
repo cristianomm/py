@@ -10,7 +10,9 @@ from sklearn.base import BaseEstimator, TransformerMixin
 class SVM:
     def __init__(self, columns):
         self.columns = columns
-        self.subjects = []
+        self.X = []
+        self.y = []
+        self.ids = []
 
 
     '''
@@ -18,15 +20,21 @@ class SVM:
     '''
     def load(self, fileName):
         with open(fileName, 'r') as sbjFile:
+            subjects = []
             reader = csv.reader(sbjFile, delimiter=';')
             for line in reader:
-                self.subjects.append(line)
-        subjects = np.matrix(self.subjects)
+                tmp = np.asarray(line)
+                tmp = tmp[columns]
+                self.X.append(np.asarray(tmp[1:], dtype=np.float32))
+                self.ids.append(line[0])
+
         sbjFile.close()
 
-        X = subjects[:, 1:]
-        y = []
-        ids = subjects[:,0]
+        self.y = [
+            0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+            0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+            0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,0
+        ]
 
     '''
         Normalia cada coluna
@@ -40,12 +48,12 @@ class SVM:
     '''
 
     '''
-    def classify(self, X, y):
-
-        loo = cross_validation.LeaveOneOut(len(y))
+    def classify(self):
+        #normalise()
         clf = SVC(C=0.1, kernel='linear')
-
-        return loo
+        clf.fit(self.X, self.y)
+        print clf.support_vectors_
+        return clf
 
     '''
         Retorna uma lista com o indice das colunas que mais contribuiram para a classificacao
@@ -67,7 +75,8 @@ if __name__ == "__main__":
     #colunas que contem os dados das tarefas que foram realizadas
     columns = [0,1,2,4,5,6,11,12,13,14,15,16]
     svm = SVM(columns)
-
     svm.load(fileName)
+    svm.classify()
+
 
 
