@@ -1,8 +1,13 @@
 import csv
 import numpy as np
+import random
+import math
 
-from sklearn import cross_validation
+from matplotlib import pyplot as plt
+
+from sklearn.cross_validation import train_test_split
 from sklearn.svm import SVC
+from sklearn import preprocessing
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -19,6 +24,9 @@ class SVM:
         carrega o arquivo com os dados comportamentais
     '''
     def load(self, fileName):
+
+        #data = datasets.load_iris()
+
         with open(fileName, 'r') as sbjFile:
             subjects = []
             reader = csv.reader(sbjFile, delimiter=';')
@@ -30,29 +38,80 @@ class SVM:
 
         sbjFile.close()
 
-        self.y = [
-            0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
-            0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
-            0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,0
-        ]
+        self.X = np.asarray(self.X)
+
+        median = np.median(self.X[:,[5]])
+
+        # atribui quem eh bom ou mau leitor conforme a mediana...
+        for v in self.X[:,[5]]:
+            if(v < median):
+                self.y.append(0)
+            else:
+                self.y.append(1)
+
+        self.X = self.normalise(self.X)
+
+        #spl = self.splitData(self.X, 30)#utiliza um percentual de 30% como conj. de treinamento
+
+
+    def splitData(self, X, percnt):
+        percnt = int(math.floor(len(X) * ((float(percnt) / 100))))
+        y = np.asarray(random.sample(X, percnt))
+        return [X, y]
 
     '''
         Normalia cada coluna
     '''
-    def normalise(self, X_train, X_test):
-        scaler = StandardScaler()
-        X_train = scaler.fit_transform(X_train)
-        X_test  = scaler.transform(X_test)
-
+    def normalise(self, X):
+        X = preprocessing.normalize(X)
+        return X
 
     '''
 
     '''
     def classify(self):
-        #normalise()
-        clf = SVC(C=0.1, kernel='linear')
-        clf.fit(self.X, self.y)
-        print clf.support_vectors_
+        clf = SVC(C=0.001, kernel='rbf')
+        #clf.fit(self.X, self.y)
+
+        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=.3)
+
+        clf.fit(X_train, y_train)
+
+        #clf.predict()
+
+        plt.figure(1)
+        plt.clf()
+        plt.scatter(self.X[:, 0], self.X[:, 1], c=self.y, zorder=10, cmap=plt.cm.Paired)
+
+        # Circle out the test data
+        plt.scatter(X_test[:, 0], X_test[:, 1], s=80, facecolors='none', zorder=10)
+        #clf.decision_function()
+
+        plt.show()
+
+        plt.axis('tight')
+        x_min = self.X[:, 0].min()
+        x_max = self.X[:, 0].max()
+        y_min = self.X[:, 1].min()
+        y_max = self.X[:, 1].max()
+
+        XX, YY = np.mgrid[x_min:x_max:200j, y_min:y_max:200j]
+        Z = clf.decision_function(np.c_[XX.ravel(), YY.ravel()])
+
+        # Put the result into a color plot
+        Z = Z.reshape(XX.shape)
+        plt.pcolormesh(XX, YY, Z > 0, cmap=plt.cm.Paired)
+        plt.contour(XX, YY, Z, colors=['k', 'k', 'k'], linestyles=['--', '-', '--'],
+                    levels=[-.5, 0, .5])
+
+        plt.title('linear')
+
+
+
+        #for i in range(10):
+        #    pyplot.plot(clf.support_vectors_[:,[i]])
+        #pyplot.show()
+        #print clf.support_vectors_
         return clf
 
     '''
@@ -70,12 +129,14 @@ class SVM:
         return None
 
 if __name__ == "__main__":
-    fileName = '/home/cristianomm/Projects/PyCharm/py/data/Comp2014.csv'
+
+    dataFile = '/home/cristianomm/Projects/PyCharm/py/data/Comp2014.csv'
+
 
     #colunas que contem os dados das tarefas que foram realizadas
-    columns = [0,1,2,4,5,6,11,12,13,14,15,16]
+    columns = [0,1,2,4,5,6,11,12,13,14,15,16]#13 -> c38 Vel.Leitura pala
     svm = SVM(columns)
-    svm.load(fileName)
+    svm.load(dataFile)
     svm.classify()
 
 
