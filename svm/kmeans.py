@@ -17,47 +17,63 @@ ids = []
 X = []
 y = []
 
-dataFile = '/home/cristianomm/Projects/PyCharm/py/data/Comp2014.csv'
+colNames=[
+'CP(Caracteres)',
+'CP(Erros)',
+'CL(Vel. leitura)',
+'PL(Vel. leitura)',
+'PL(Total erros)',
+'PL(Erros regulares)',
+'PL(Erros irregulares)',
+'PL(Erros pseudo)',
+'PT(N Palavras)'
+]
+#'Compreensao leitora(Resp. espontaneas)',
+#'Compreensao leitora(Resp. dirigidas)',
+
+dataFile = '/home/cristianomm/Projects/PyCharm/py/data/Quantitativos_2014.csv'#Comp2014.csv'
 
 #colunas que contem os dados das tarefas que foram realizadas
-columns = [0,1,2,4,5,6,11,12,13,14,15,16, 17]#13 -> c38 Vel.Leitura pala
+#columns = [0,1,2,4,5,6,11,12,13,14,15,16, 17]#13 -> c38 Vel.Leitura pala
+columns = [1,2,3,4,5,6,7,8,9]
 with open(dataFile, 'r') as sbjFile:
     subjects = []
     reader = csv.reader(sbjFile, delimiter=';')
     for line in reader:
         tmp = np.asarray(line)
         tmp = tmp[columns]
-        X.append(np.asarray(tmp[1:], dtype=np.float32))
+        X.append(np.asarray(tmp[0:], dtype=np.float32))
         ids.append(line[0])
 
 sbjFile.close()
 
 X = np.asarray(X)
+y = np.empty(len(X))
+
 #print(X[:,[5]])
 
+#calcula a mediana da velocidade de leitura da task de pseudopalavras
+median = np.median(X[:, [4]])
 
-median = np.median(X[:, [5]])
-
-# atribui quem eh bom ou mau leitor conforme a mediana...
-for v in X[:, [5]]:
-    if (v < median):
-        y.append(0)
-    else:
-        y.append(1)
+# atribui quem eh bom ou mau leitor conforme a mediana da velocidade de leitura
+#for v in X[:, [4]]:
+ #   if (v < median):
+ #       y.append(0)
+ #   else:
+ #       y.append(1)
 
 X = preprocessing.normalize(X)
 
-X = X[:, [5, 6, 7]]
+#utiliza somente as colunas
+selCols=[0,1,2,3,4,5,6,7,8]
+X = X[:, selCols]
 
 np.random.seed(5)
-
 centers = [[1, 1], [-1, -1], [1, -1]]
 #iris = datasets.load_iris()
-
-
 #'k_means_iris_8': KMeans(n_clusters=8), 'k_means_iris_bad_init': KMeans(n_clusters=3, n_init=1, init='random')
 
-estimators = {'k_means_iris_2': KMeans(n_clusters=2)}
+estimators = {'k_means_2': KMeans(n_clusters=2)}
 
 
 fignum = 1
@@ -69,7 +85,18 @@ for name, est in estimators.items():
     plt.cla()
     est.fit(X)
 
-    print(est.predict([145, 15, 6]))
+    for i in range(len(X)):
+        p = est.predict(X[i])
+        y[i] = p
+        #print('{0} - [{1}] >> {2}'.format(ids[i], X[i], p))
+
+    print('Bons:{0} - Maus:{1}'.format(np.sum(y == 0), np.sum(y == 1)))
+
+    with open('kmeans_classify.csv', 'w') as fp:
+        a = csv.writer(fp)
+        for i in range(len(X)):
+            a.writerow([ids[i],y[i],','.join(map(str,X[i, selCols])).replace('\"', '')])
+
 
     labels = est.labels_
 
@@ -78,9 +105,9 @@ for name, est in estimators.items():
     ax.w_xaxis.set_ticklabels([])
     ax.w_yaxis.set_ticklabels([])
     ax.w_zaxis.set_ticklabels([])
-    ax.set_xlabel('Vel. Leitura (pala)')
-    ax.set_ylabel('Total Erros (pala)')
-    ax.set_zlabel('Vel Leitura (Comp. Leitora)')
+    ax.set_xlabel(colNames[selCols[0]])
+    ax.set_ylabel(colNames[selCols[1]])
+    ax.set_zlabel(colNames[selCols[2]])
     fignum = fignum + 1
 
 # Plot the ground truth
@@ -104,7 +131,7 @@ ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=y)
 ax.w_xaxis.set_ticklabels([])
 ax.w_yaxis.set_ticklabels([])
 ax.w_zaxis.set_ticklabels([])
-ax.set_xlabel('Vel. Leitura (pala)')
-ax.set_ylabel('Total Erros (pala)')
-ax.set_zlabel('Vel Leitura (Comp. Leitora)')
+ax.set_xlabel(colNames[selCols[0]])
+ax.set_ylabel(colNames[selCols[1]])
+ax.set_zlabel(colNames[selCols[2]])
 plt.show()
