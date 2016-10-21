@@ -58,14 +58,10 @@ class SVM:
 
     '''
     def classify(self):
-        clf = SVC(C=0.001, kernel='linear')
-        #clf.fit(self.X, self.y)
+        clf = SVC(C=0.1, kernel='linear')
 
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=.2)
-
         clf.fit(X_train, y_train)
-
-        #clf.predict()
 
         plt.figure(1)
         plt.clf()
@@ -106,7 +102,7 @@ class SVM:
         y_min = self.X[:, 1].min()
         y_max = self.X[:, 1].max()
 
-        XX, YY = np.mgrid[x_min:x_max:200j, y_min:y_max:200j]
+        XX, YY = np.mgrid[x_min:x_max:20j, y_min:y_max:20j]
         Z = clf.decision_function(np.c_[XX.ravel(), YY.ravel()])
 
         # Put the result into a color plot
@@ -136,11 +132,9 @@ class SVM:
 
 if __name__ == "__main__":
 
-    dataFile = '/home/cristianomm/Projects/PyCharm/py/data/kmeans_classify.csv'
-
-
+    dataFile = '../data/kmeans_classify.csv'
     #colunas que contem os dados das tarefas que foram realizadas
-    columns = [0,1,2,3,4,5,6,7,8,9]#13 -> c38 Vel.Leitura pala
+    columns = [0,1,2,3,4,5,6,7,8,9]
     svm = SVM(columns)
     svm.load(dataFile)
     svm.classify()
