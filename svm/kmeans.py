@@ -14,6 +14,26 @@ from sklearn.preprocessing import StandardScaler
 
 
 
+def plot(data, colNames, clf, refCols):
+    fignum = 1
+    fig = plt.figure(fignum, figsize=(8, 6))
+    plt.clf()
+    ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
+    plt.cla()
+    labels = clf.labels_
+    ax.scatter(data[:, 0], data[:, 1], data[:, 2], c=labels.astype(np.float))
+
+    ax.w_xaxis.set_ticklabels([])
+    ax.w_yaxis.set_ticklabels([])
+    ax.w_zaxis.set_ticklabels([])
+    ax.set_xlabel(colNames[refCols[0]])
+    ax.set_ylabel(colNames[refCols[1]])
+    ax.set_zlabel(colNames[refCols[2]])
+    fignum = fignum + 1
+    plt.show()
+
+    return
+
 
 
 def loadSbj(lineData):
@@ -75,160 +95,110 @@ def validate(X, y, clusters):
 
     # print('Bons:{0} - Maus:{1}'.format((y.count(0)), (y.count(1))))
     #print('Accuracy:{0} - Precision:{1} - Recall:{2} - FScore:{3}'.format(accuracy, precision, recall, fscore))
-    return [accuracy, precision, recall, fscore]
+    return [accuracy, precision, recall, fscore, clf]
 
 
+if __name__ == "__main__":
+    ids = []
+    X = []
+    y = []
+    gd = [] #groud truth...
+    kmeansResult=[]#guarda o resultado da classificacao para o kmeans
+
+    colNames=[
+    'CP(Caracteres)',       #0
+    'CP(Erros)',            #1
+    'CL(Vel. leitura)',     #2
+    'PL(Vel. leitura)',     #3
+    'PL(Total erros)',      #4
+    'PL(Erros regulares)',  #5
+    'PL(Erros irregulares)',#6
+    'PL(Erros pseudo)',     #7
+    'PT(N Palavras)'        #8
+    ]
+    dataFile = '../data/Quantitativos_2014.csv'#Comp2014.csv'
+
+    #colunas que contem os dados das tarefas que foram realizadas
+    columns = [2,3,4,5,6,7,8,9,10]  #colunas com os dados
+    selCols=[3,6,7]#x for x in range(9)]  #Colunas selecionadas para realizar o agrupamento
+
+    #indica se deve incluir na classificacao os sujeitos que
+    #nao possuem classificacao previa
+    notClassified = False
+
+    np.random.seed(5)
+
+    with open(dataFile, 'r') as sbjFile:
+        subjects = []
+        reader = csv.reader(sbjFile, delimiter=';')
+        for line in reader:
+            if(notClassified):#carrega todos
+                loadSbj(line)
+            elif(notClassified == False and len(line[1])>0):#carrega apenas quem ja possui classificacao
+                loadSbj(line)
+
+    sbjFile.close()
 
 
-ids = []
-X = []
-y = []
-gd = [] #groud truth...
-kmeansResult=[]#guarda o resultado da classificacao para o kmeans
+    ids = np.array(ids)
+    gd = np.asarray(gd)
+    y = []#np.empty(len(X))
+    X = np.asarray(X)
 
-colNames=[
-'CP(Caracteres)',       #0
-'CP(Erros)',            #1
-'CL(Vel. leitura)',     #2
-'PL(Vel. leitura)',     #3
-'PL(Total erros)',      #4
-'PL(Erros regulares)',  #5
-'PL(Erros irregulares)',#6
-'PL(Erros pseudo)',     #7
-'PT(N Palavras)'        #8
-]
-dataFile = '../data/Quantitativos_2014.csv'#Comp2014.csv'
+    #print(X[:,[5]])
+    #calcula a mediana da velocidade de leitura da task de pseudopalavras
+    median = np.median(X[:, [3]])
 
-#colunas que contem os dados das tarefas que foram realizadas
-columns = [2,3,4,5,6,7,8,9,10]  #colunas com os dados
-selCols=[3,6,7]#x for x in range(9)]  #Colunas selecionadas para realizar o agrupamento
-
-#indica se deve incluir na classificacao os sujeitos que
-#nao possuem classificacao previa
-notClassified = True
-
-with open(dataFile, 'r') as sbjFile:
-    subjects = []
-    reader = csv.reader(sbjFile, delimiter=';')
-    for line in reader:
-        if(notClassified):#carrega todos
-            loadSbj(line)
-        elif(notClassified == False and len(line[1])>0):#carrega apenas quem ja possui classificacao
-            loadSbj(line)
-
-sbjFile.close()
-
-
-ids = np.array(ids)
-gd = np.asarray(gd)
-y = []#np.empty(len(X))
-X = np.asarray(X)
-
-#print(X[:,[5]])
-#calcula a mediana da velocidade de leitura da task de pseudopalavras
-median = np.median(X[:, [3]])
-
-# atribui quem eh bom ou mau leitor conforme a mediana da velocidade de leitura de pseudopalavras
-for i in range(len(X)):
-    v = X[i,3]
-    if(gd[i] == -1 or gd[i] == 2):
-        if (v < median):
-            y.append(0)
+    # atribui quem eh bom ou mau leitor conforme a mediana da velocidade de leitura de pseudopalavras
+    for i in range(len(X)):
+        v = X[i,3]
+        if(gd[i] == -1 or gd[i] == 2):
+            if (v < median):
+                y.append(0)
+            else:
+                y.append(1)
         else:
-            y.append(1)
-    else:
-        y.append(gd[i])
+            y.append(gd[i])
 
-X = preprocessing.normalize(X)
-y = np.array(y).astype(np.int32)
+    #X = preprocessing.normalize(X)
+    y = np.array(y).astype(np.int32)
 
-np.random.seed(5)
+    clusters=2
 
-clusters=2
+    #realiza uma classificacao com todas as colunas
+    XS = X[:, [x for x in range(9)]]
+    allCols = validate(XS,y,clusters)
+    print 'all columns:\n{0}'.format(allCols[0:4])
 
-#realiza uma classificacao com todas as colunas
-print 'all columns:'
-XS = X[:, [x for x in range(9)]]
-allCols = validate(XS,y,clusters)
-print allCols
-
-lessCols=[]
-bestCols=[]
-poor=[1,1,1,1]
-best=[-1,-1,-1,-1]
-for a in range(9):
-    for b in range(a+1, 9):
-        for c in range(b+1, 9):
-            selCols=[a,b,c]
-            XS = X[:, selCols]
-            #print(selCols)
-            val = validate(XS,y,clusters)
-            if(best[0] < val[0]):
-                bestCols=selCols
-                best=val
-            if(poor[0]>val[0]):
-                lessCols=selCols
-                poor = val
-
-
-#salva um csv com os resultados
-save_csv(ids,gd,y,X)
-
-print 'Best: {0}'.format(bestCols)
-print best
-
-print 'Poor: {0}'.format(lessCols)
-print poor
+    clfB=None
+    clfP=None
+    lessCols=[]
+    bestCols=[]
+    poor=[1,1,1,1]
+    best=[-1,-1,-1,-1]
+    for a in range(9):
+        for b in range(a+1, 9):
+            for c in range(b+1, 9):
+                selCols=[a,b,c]
+                XS = X[:, selCols]
+                #print(selCols)
+                val = validate(XS,y,clusters)
+                if(best[0] < val[0]):
+                    bestCols=selCols
+                    best = val
+                    clfB = val[4]
+                if(poor[0]>val[0]):
+                    lessCols=selCols
+                    poor = val
+                    clfP = val[4]
 
 
-#for i in range(len(X)):
-#    p = classifier.predict(X[i])
-#    y.append(np.asarray(p[0], dtype=np.int32))
-    #print('{0} - [{1}] >> {2}'.format(ids[i], X[i], p))
+    #salva um csv com os resultados
+    save_csv(ids,gd,y,X)
 
+    print 'Best: {0} \n{1}'.format(bestCols, best[0:4])
+    print 'Poor: {0} \n{1}'.format(lessCols, poor[0:4])
 
-fignum = 1
-fig = plt.figure(fignum, figsize=(8, 6))
-plt.clf()
-ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
-plt.cla()
-labels = classifier.labels_
-ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=labels.astype(np.float))
-
-ax.w_xaxis.set_ticklabels([])
-ax.w_yaxis.set_ticklabels([])
-ax.w_zaxis.set_ticklabels([])
-ax.set_xlabel(colNames[bestCols[0]])
-ax.set_ylabel(colNames[bestCols[1]])
-ax.set_zlabel(colNames[bestCols[2]])
-fignum = fignum + 1
-plt.show()
-#
-'''
-fig = plt.figure(fignum, figsize=(4, 3))
-plt.clf()
-ax = Axes3D(fig, rect=[0, 0, .95, 1], elev=48, azim=134)
-
-plt.cla()
-
-for name, label in [('Bom', 0),
-                    ('Mau', 1)]:
-    ax.text3D(X[y == label, 0].mean(),
-              X[y == label, 1].mean() + 1.5,
-              X[y == label, 2].mean(), name,
-              horizontalalignment='center',
-              bbox=dict(alpha=.5, edgecolor='w', facecolor='w'))
-# Reorder the labels to have colors matching the cluster results
-y = np.choose(y, [1, 0]).astype(np.float)
-ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=y)
-
-ax.w_xaxis.set_ticklabels([])
-ax.w_yaxis.set_ticklabels([])
-ax.w_zaxis.set_ticklabels([])
-ax.set_xlabel(colNames[selCols[0]])
-ax.set_ylabel(colNames[selCols[1]])
-ax.set_zlabel(colNames[selCols[2]])
-plt.show()
-'''
-
+    plot(XS, colNames, clfB, bestCols)
+    plot(XS, colNames, clfP, lessCols)
 
