@@ -11,7 +11,6 @@ from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import StandardScaler
 
 
-
 def plot(data, colNames, clf, refCols):
     fignum = 1
     fig = plt.figure(fignum, figsize=(8, 6))
