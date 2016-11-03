@@ -188,7 +188,6 @@ if __name__ == "__main__":
                     poor = val
                     clfP = val[4]
 
-
     #salva um csv com os resultados
     save_csv(ids,gd,y,X)
 
