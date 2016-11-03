@@ -4,10 +4,8 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from sklearn.cross_validation import train_test_split
 
 from sklearn.cluster import KMeans
-from sklearn import preprocessing
 from sklearn import cross_validation
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import StandardScaler
