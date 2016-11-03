@@ -35,7 +35,6 @@ def plot(data, colNames, clf, refCols):
     return
 
 
-
 def loadSbj(lineData):
     tmp = np.asarray(lineData)
     tmp = tmp[columns]
