@@ -122,7 +122,6 @@ if __name__ == "__main__":
     columns = [2,3,4,5,6,7,8,9,10]  #colunas com os dados
     selCols=[]  #Colunas selecionadas para realizar o agrupamento
 
-
     #indica se deve incluir na classificacao os sujeitos que
     #nao possuem classificacao previa
     notClassified = False
